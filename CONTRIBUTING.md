@@ -88,15 +88,37 @@ docs/<qué>      documentación, harness, ADRs
 
 ### `main` protegida
 
-Configurar en GitHub → Settings → Branches:
+**Ya está activa.** Sin esto todo lo de arriba sería voluntario: cualquiera
+pushearía directo y se saltearía CI y review.
 
-- PR obligatoria, sin push directo.
-- Checks requeridos: `harness`, `spec-gate`, `stack`.
-- Al menos 1 aprobación.
-- Aprobaciones obsoletas se descartan al pushear nuevos commits.
+| Regla | Valor | Por qué |
+|---|---|---|
+| PR obligatoria | sí | no hay push directo a `main` |
+| Checks requeridos | `Consistencia del harness`, `Gate de spec (C2)`, `Checks del stack` | el harness no es opcional |
+| Rama al día antes de mergear | sí (`strict`) | los checks corren contra `main` actual, no contra una vieja |
+| Aprobaciones requeridas | **0** | ⚠️ ver abajo |
+| Descartar aprobaciones al pushear | sí | una aprobación de hace 3 commits no aprueba el código actual |
+| Historia lineal | sí | sin merge commits: el historial se lee |
+| Force push / borrar `main` | no | |
+| Conversaciones resueltas | sí | un comentario de review sin resolver bloquea el merge |
+| **Aplica también a admins** | **sí** | |
 
-Sin esto, todo lo de arriba es voluntario. Es lo primero que hay que activar al
-sumar el segundo dev.
+**Aprobaciones en 0, y hay que subirlo.** GitHub no permite aprobar tu propia PR,
+así que con un solo dev un mínimo de 1 dejaría el repo sin poder mergear nada.
+**Al sumar el segundo dev, subilo a 1:**
+
+```bash
+gh api -X PATCH repos/TPiraino/administrador-de-canchas/branches/main/protection/required_pull_request_reviews \
+  -F required_approving_review_count=1
+```
+
+Hasta entonces, el Gate 2 lo sostienen `feature-review` y CI, no GitHub. Tenelo
+presente: es el eslabón más flojo del harness hoy.
+
+**Aplica a admins a propósito.** Con la excepción de admin activada, el owner
+puede pushear directo y la protección es decorativa. El escape existe —
+desactivar la protección por API— pero es un acto visible y deliberado, no un
+push silencioso. Misma lógica que los escapes de `.claude/README.md`.
 
 ## Cambiar el harness
 
