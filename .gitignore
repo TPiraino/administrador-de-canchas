@@ -1,0 +1,32 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Entorno — nunca commitear valores reales (C9)
+.env
+.env.*
+!.env.example
+
+# Logs y temporales
+*.log
+npm-debug.log*
+pnpm-debug.log*
+coverage/
+.cache/
+tmp/
+
+# Editores / SO
+.DS_Store
+.idea/
+*.swp
+
+# Claude Code — local, no compartido
+.claude/settings.local.json
+.claude-worktrees/

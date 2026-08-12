@@ -1,0 +1,16 @@
+{
+  "slug": "<slug-en-kebab-case>",
+  "title": "<título en una línea>",
+  "state": "proposed",
+  "owner": null,
+  "created": "AAAA-MM-DD",
+  "approval": null,
+  "history": [
+    {
+      "date": "AAAA-MM-DD",
+      "state": "proposed",
+      "by": "<usuario>",
+      "note": "propuesta inicial"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+name: verify
+
+# Los hooks de .claude/ solo corren en Claude Code. Este workflow es la garantía
+# real: corre para todos, con cualquier editor y cualquier agente.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  harness:
+    name: Consistencia del harness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: verify.sh --harness
+        run: ./verify.sh --harness
+
+  spec-gate:
+    name: Gate de spec (C2)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Código de producto requiere feature con spec aprobada
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          changed="$(git diff --name-only "$BASE"...HEAD)"
+          product="$(echo "$changed" | grep -E '^(apps|packages|src)/' || true)"
+
+          if [[ -z "$product" ]]; then
+            echo "✓ La PR no toca código de producto — gate no aplica."
+            exit 0
+          fi
+
+          echo "Código de producto en esta PR:"
+          echo "$product" | sed 's/^/  /'
+          echo
+
+          # Tiene que haber al menos una feature tomada o cerrada, con aprobación
+          # humana registrada y spec completa.
+          ok=0
+          shopt -s nullglob
+          for f in state/features/*.json; do
+            state="$(jq -r '.state // ""' "$f")"
+            case "$state" in in_progress|in_review|done) ;; *) continue ;; esac
+
+            slug="$(basename "$f" .json)"
+            approved_by="$(jq -r '.approval.by // ""' "$f")"
+
+            if [[ -z "$approved_by" ]]; then
+              echo "✗ $slug está en $state sin approval.by"
+              continue
+            fi
+
+            incomplete=0
+            for doc in requirements.md design.md tasks.md; do
+              if [[ ! -f "specs/$slug/$doc" ]]; then
+                echo "✗ $slug: falta specs/$slug/$doc"
+                incomplete=1
+              fi
+            done
+            (( incomplete )) && continue
+
+            echo "✓ $slug ($state) — aprobada por $approved_by, spec completa"
+            ok=1
+          done
+          shopt -u nullglob
+
+          if (( ok == 0 )); then
+            echo
+            echo "BLOQUEADO (C2): esta PR modifica código de producto y no hay ninguna"
+            echo "feature con spec aprobada por un humano en estado in_progress,"
+            echo "in_review o done."
+            echo
+            echo "Ver docs/workflow.md."
+            exit 1
+          fi
+
+  stack:
+    name: Checks del stack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ¿Hay código todavía?
+        id: check
+        run: |
+          if [[ -f package.json ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Sin package.json — capa 2 no aplica todavía."
+          fi
+
+      - uses: pnpm/action-setup@v4
+        if: steps.check.outputs.exists == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.exists == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependencias
+        if: steps.check.outputs.exists == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: verify.sh --stack
+        if: steps.check.outputs.exists == 'true'
+        run: ./verify.sh --stack
