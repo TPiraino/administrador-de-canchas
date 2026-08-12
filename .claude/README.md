@@ -8,6 +8,8 @@ propósito: es la parte del harness que hace que las reglas no sean opcionales.
   settings.json          compartido — versionado
   settings.local.json    personal — ignorado por git
   hooks/                 enforcement fuera del contexto del modelo
+  skills/                el workflow, operable
+  agents/                roles con contexto aislado
 ```
 
 ## Compartido vs. personal
@@ -34,6 +36,33 @@ commit.
 trabajo y que el modelo puede olvidar en la iteración 40. Un exit code no se
 olvida. Las reglas que importan viven acá y en `verify.sh`; el resto es
 documentación.
+
+## Skills
+
+Una por cada transición que muta `state/` o `specs/`. Están versionadas para que un
+dev nuevo clone y tenga el mismo workflow — no dependiente del `~/.claude` de cada
+máquina.
+
+| Skill | Fase | Nota |
+|---|---|---|
+| `spec-write` | spec | requirements → design → tasks, en orden; corta ante ambigüedad |
+| `spec-approve` | **Gate 1** | su trabajo principal es **no aprobar**: prepara la decisión y se detiene |
+| `feature-take` | tomar | separada de `implement` a propósito: tomar una feature es público **antes** del código |
+| `feature-implement` | implementar | test primero con el `R#` en el nombre; para si aparece algo fuera de spec |
+| `feature-review` | review | despacha subagente fresco; nunca revisa en línea (C5) |
+| `feature-close` | **Gate 2** | verifica en vez de tildar de memoria |
+
+**Lo que a propósito NO es skill:** verificar (ya es `./verify.sh`), las convenciones
+de código (`docs/conventions.md`), cómo escribir EARS (`specs/README.md`) y
+orientarse al arrancar (el hook de `SessionStart`). Envolver eso en skills agrega una
+capa que puede divergir de la fuente.
+
+## Agentes
+
+| Agente | Herramientas | Para qué |
+|---|---|---|
+| `reviewer` | solo lectura | Review de contexto fresco. Sin herramientas de escritura **a propósito**: un reviewer que arregla mientras revisa termina aprobando su propio trabajo (C5) |
+| `spec-critic` | solo lectura | Ataca la spec antes del Gate 1 buscando ambigüedad, requisitos no verificables y contratos inventados. Es el punto más barato del ciclo para encontrar un malentendido |
 
 ## Escapes
 

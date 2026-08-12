@@ -29,6 +29,43 @@ Los dos que más se violan por descuido:
 
 Leé `progress/current.md` **primero** en cada sesión nueva. Es el handoff.
 
+## Skills del proyecto
+
+El workflow es operable: cada transición de estado tiene su skill en
+`.claude/skills/`, versionada en el repo para que todos los devs trabajen igual.
+
+| Fase | Skill | Qué muta |
+|---|---|---|
+| Spec | `spec-write` | crea `specs/<slug>/`, estado → `spec_draft` |
+| **Gate 1** | `spec-approve` | estado → `spec_approved` + `approval` — **solo con OK humano** |
+| Tomar | `feature-take` | `owner` + estado → `in_progress`, rama, handoff |
+| Implementar | `feature-implement` | código, tests, tildes de `tasks.md` |
+| Review | `feature-review` | estado → `in_review`, despacha el agente `reviewer` |
+| **Gate 2** | `feature-close` | estado → `done`, mueve a `history.md` |
+
+Agentes en `.claude/agents/`: **`reviewer`** (contexto fresco, solo lectura — C5) y
+**`spec-critic`** (ataca la spec antes del Gate 1).
+
+### Precedencia sobre skills globales
+
+Las skills de este repo **reemplazan** a sus equivalentes globales. Si tenés las dos
+familias disponibles, gana la del repo:
+
+| No uses acá | Usá |
+|---|---|
+| `writing-plans`, `planner`, `brainstorming` | `spec-write` |
+| `executing-plans`, `subagent-driven-development` | `feature-implement` |
+| `reviewer-tl`, `requesting-code-review`, `code-review` | `feature-review` |
+| `dev-workflow`, `intensive-workflow` | el ciclo de `docs/workflow.md` |
+
+**Por qué:** producen artefactos que el harness no reconoce y que `verify.sh` no
+puede verificar. Un plan que no es `tasks.md` es un plan que nadie puede auditar.
+
+**Lo que sí sigue valiendo:** las skills de stack (`dev-nestjs`, `dev-nextjs`,
+`dev-terraform`) dicen *cómo* escribir bien cada tecnología, y eso es
+complementario. `test-driven-development` y `systematic-debugging` también — la
+única diferencia acá es que el test además menciona el ID del requisito.
+
 ## Según la tarea
 
 | Si vas a… | Leé |

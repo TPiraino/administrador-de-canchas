@@ -54,7 +54,9 @@ minutos. Si venís a contribuir: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 | [`state/`](state/) | estado de cada feature, un archivo por feature |
 | [`progress/`](progress/) | handoff entre sesiones e historial |
 | [`verify.sh`](verify.sh) | **la única definición de "verde"** |
-| [`.claude/`](.claude/) | hooks compartidos que enforzan las reglas |
+| [`.claude/skills/`](.claude/) | el workflow, operable: una skill por transición de estado |
+| [`.claude/agents/`](.claude/) | `reviewer` (contexto fresco) y `spec-critic` |
+| [`.claude/hooks/`](.claude/) | enforcement fuera del contexto del modelo |
 
 ## El ciclo, en corto
 
@@ -66,7 +68,16 @@ propose ──▶ spec ──▶ [GATE humano] ──▶ implement ──▶ rev
                     código                     implementación
 ```
 
-El detalle está en [`docs/workflow.md`](docs/workflow.md).
+Cada transición tiene su skill versionada en el repo, así que un dev que clona
+tiene el mismo workflow sin configurar nada:
+
+```
+/spec-write  →  /spec-approve  →  /feature-take  →  /feature-implement
+                                       →  /feature-review  →  /feature-close
+```
+
+El detalle está en [`docs/workflow.md`](docs/workflow.md), y la precedencia sobre
+skills globales en [`AGENTS.md`](AGENTS.md).
 
 ## Stack
 

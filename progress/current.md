@@ -10,7 +10,7 @@
 
 ## Última sesión
 
-**2026-08-12 — Harness V0**
+**2026-08-12 — Harness V0 + capa operable**
 
 Se construyó el andamiaje del proyecto desde cero. Todavía no hay código de
 producto y eso es intencional (C7: no hay scaffold vacío).
@@ -26,14 +26,29 @@ Qué quedó:
 - ADRs 0001–0003: stack, layout, y por qué harness propio
 - `verify.sh` con enforcement de los invariantes
 - Hooks de Claude Code: gate de spec, guard de secretos, handoff en session start
+- **6 skills** (`spec-write`, `spec-approve`, `feature-take`,
+  `feature-implement`, `feature-review`, `feature-close`) y **2 agentes**
+  (`reviewer` de solo lectura, `spec-critic`), versionados para que el workflow
+  sea el mismo para cualquier dev que clone
+- CI, PR template, `CONTRIBUTING.md` y `docs/onboarding.md` para varios devs
+
+Bugs encontrados y arreglados probando el enforcement, no leyéndolo:
+
+- El patrón de clave privada empieza con `-`, así que `grep` lo tomaba como
+  opciones y el guard de secretos nunca matcheaba claves privadas.
+- Las 6 skills tenían frontmatter YAML inválido (`Disparadores: "…"` mete un
+  `: ` en un escalar sin quotear) y no habrían cargado. `verify.sh` ahora valida
+  el frontmatter de verdad en vez de grepear el nombre.
 
 ## Próximo paso
 
-Proponer la primera feature. El candidato natural es el modelo de dominio
-mínimo — club, cancha, disponibilidad — pero eso se decide al proponer, no acá.
+Proponer la primera feature con `/spec-write`. El candidato natural es el modelo
+de dominio mínimo — club, cancha, disponibilidad — pero eso se decide al
+proponer, no acá.
 
-Cuando arranque: `state/features/<slug>.json` en `proposed`, copiar
-`specs/_template/` y escribir `requirements.md`.
+La primera feature además ejercita lo que todavía no corrió nunca: el job
+`spec-gate` de CI (solo dispara en PRs), la capa 2 de `verify.sh`, y las 6 skills
+contra un caso real.
 
 ## Pendientes conocidos
 

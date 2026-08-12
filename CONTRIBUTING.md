@@ -14,14 +14,19 @@ sobre este archivo y sobre cualquier otra cosa acá.
 propose ──▶ spec ──▶ [GATE 1] ──▶ implement ──▶ review ──▶ [GATE 2] ──▶ done
 ```
 
-| Fase | Quién | Salida |
-|---|---|---|
-| propose | cualquiera | issue con la plantilla de propuesta + `state/features/<slug>.json` |
-| spec | autor de la spec (persona o agente) | `specs/<slug>/{requirements,design,tasks}.md` |
-| **GATE 1** | **un humano que no escribió la spec** | `state: spec_approved` + `approval: {by, at}` |
-| implement | owner de la feature | código + tests + tildes en `tasks.md` |
-| review | **otra persona, o un contexto fresco** | `progress/review_<slug>.md` |
-| **GATE 2** | reviewer + CI | `verify.sh` verde + veredicto aprobado |
+| Fase | Quién | Skill | Salida |
+|---|---|---|---|
+| propose | cualquiera | — | issue con la plantilla de propuesta |
+| spec | autor de la spec (persona o agente) | `/spec-write` | `specs/<slug>/{requirements,design,tasks}.md` |
+| **GATE 1** | **un humano que no escribió la spec** | `/spec-approve` | `state: spec_approved` + `approval: {by, at}` |
+| tomar | quien va a implementar | `/feature-take` | `owner` + `in_progress` + rama, commiteado |
+| implement | owner de la feature | `/feature-implement` | código + tests + tildes en `tasks.md` |
+| review | **otra persona, o un contexto fresco** | `/feature-review` | `progress/review_<slug>.md` |
+| **GATE 2** | reviewer + CI | `/feature-close` | `verify.sh` verde + veredicto aprobado |
+
+Las skills están versionadas en `.claude/skills/`: clonás y tenés el mismo workflow,
+sin configurar nada. **Usá las del repo, no sus equivalentes globales** —
+`AGENTS.md` tiene la tabla de precedencia y el motivo.
 
 Detalle completo en [`docs/workflow.md`](docs/workflow.md).
 

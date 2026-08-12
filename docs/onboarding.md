@@ -41,6 +41,17 @@ Lo mínimo que tenés que retener:
 propose ──▶ spec ──▶ [GATE humano] ──▶ implement ──▶ review ──▶ [GATE verde] ──▶ done
 ```
 
+No hace falta ejecutarlo de memoria: cada transición tiene su skill en el repo.
+
+```
+/spec-write  →  /spec-approve  →  /feature-take  →  /feature-implement
+                                       →  /feature-review  →  /feature-close
+```
+
+**Importante:** usá estas y no las globales que puedas tener instaladas
+(`planner`, `writing-plans`, `reviewer-tl`, `dev-workflow`). La tabla de
+precedencia y el motivo están en [`AGENTS.md`](../AGENTS.md).
+
 Y que hay **una sola** cosa que habilita escribir código de producto: una feature
 en `in_progress`, con `approval` registrado, con spec completa. Si no está eso, un
 hook te va a bloquear el Write — y si trabajás con otro editor, te va a bloquear
@@ -85,14 +96,16 @@ contra eso. Veredicto binario: aprobado o rechazado con findings. No existe
 ./verify.sh --stack      # solo typecheck/lint/tests/build
 ```
 
-| Quiero… | Leo |
-|---|---|
-| escribir una spec | [`specs/README.md`](../specs/README.md) |
-| cambiar algo ya especificado | [`changes/README.md`](../changes/README.md) |
-| escribir código | [`docs/conventions.md`](conventions.md) |
-| revisar una PR | [`docs/verification.md`](verification.md) |
-| entender por qué el stack es este | [`docs/adr/0001-stack.md`](adr/0001-stack.md) |
-| entender por qué el harness es este | [`docs/adr/0003-harness-spec-driven.md`](adr/0003-harness-spec-driven.md) |
+| Quiero… | Leo | Corro |
+|---|---|---|
+| escribir una spec | [`specs/README.md`](../specs/README.md) | `/spec-write` |
+| aprobar una spec | [`docs/workflow.md`](workflow.md) | `/spec-approve` |
+| arrancar a implementar | [`docs/conventions.md`](conventions.md) | `/feature-take` → `/feature-implement` |
+| revisar una PR | [`docs/verification.md`](verification.md) | `/feature-review` |
+| cerrar una feature | [`docs/verification.md`](verification.md) | `/feature-close` |
+| cambiar algo ya especificado | [`changes/README.md`](../changes/README.md) | — |
+| entender por qué el stack es este | [`docs/adr/0001-stack.md`](adr/0001-stack.md) | — |
+| entender por qué el harness es este | [`docs/adr/0003-harness-spec-driven.md`](adr/0003-harness-spec-driven.md) | — |
 
 ## Las tres cosas que más frustran al principio
 

@@ -93,7 +93,95 @@ verify_harness() {
     verify_features "${feature_files[@]}"
   fi
 
+  verify_skills
   verify_no_secrets
+}
+
+# Las skills y agentes son parte del harness compartido: si alguien borra uno o le
+# rompe el frontmatter, el workflow deja de ser operable para todo el equipo y nadie
+# se entera hasta que lo necesita.
+#
+# El frontmatter se valida de verdad, no solo se grepea el nombre: un `description`
+# sin quotear que contenga «: » rompe el YAML y la skill no carga, en silencio.
+# Pasó una vez; por eso está acá.
+verify_skills() {
+  local expected_skills=(
+    spec-write spec-approve feature-take
+    feature-implement feature-review feature-close
+  )
+  local expected_agents=(reviewer spec-critic)
+
+  local missing=() broken=()
+  local s a f
+
+  for s in "${expected_skills[@]}"; do
+    f=".claude/skills/$s/SKILL.md"
+    [[ -f "$f" ]] || { missing+=("$f"); continue; }
+    check_frontmatter "$f" "$s" || broken+=("$FM_ERROR")
+  done
+
+  for a in "${expected_agents[@]}"; do
+    f=".claude/agents/$a.md"
+    [[ -f "$f" ]] || { missing+=("$f"); continue; }
+    check_frontmatter "$f" "$a" || broken+=("$FM_ERROR")
+  done
+
+  if ((${#missing[@]})); then
+    fail "faltan skills/agentes del harness: ${missing[*]}"
+  fi
+  if ((${#broken[@]})); then
+    fail "frontmatter roto:"
+    printf '      %s\n' "${broken[@]}" >&2
+  fi
+  if ((${#missing[@]} == 0 && ${#broken[@]} == 0)); then
+    pass "skills (${#expected_skills[@]}) y agentes (${#expected_agents[@]}) con frontmatter válido"
+  fi
+}
+
+# Valida el frontmatter YAML de una skill o agente. Deja el motivo en $FM_ERROR.
+FM_ERROR=""
+check_frontmatter() {
+  local file="$1" expected_name="$2"
+  FM_ERROR=""
+
+  if [[ "$(head -1 "$file")" != "---" ]]; then
+    FM_ERROR="$file: no arranca con «---»"
+    return 1
+  fi
+
+  local fm
+  fm="$(awk 'NR>1 { if ($0 == "---") exit; print }' "$file")"
+  if [[ -z "$fm" ]]; then
+    FM_ERROR="$file: frontmatter vacío o sin cierre «---»"
+    return 1
+  fi
+
+  local declared
+  declared="$(printf '%s\n' "$fm" | sed -n 's/^name:[[:space:]]*//p' | head -1 | tr -d "\"'")"
+  if [[ -z "$declared" ]]; then
+    FM_ERROR="$file: falta «name»"
+    return 1
+  fi
+  if [[ "$declared" != "$expected_name" ]]; then
+    FM_ERROR="$file: name=«$declared», se esperaba «$expected_name»"
+    return 1
+  fi
+
+  local desc
+  desc="$(printf '%s\n' "$fm" | sed -n 's/^description:[[:space:]]*//p' | head -1)"
+  if [[ -z "$desc" ]]; then
+    FM_ERROR="$file: falta «description»"
+    return 1
+  fi
+
+  # Escalar YAML sin quotear que contiene «: » → el parser corta ahí y la skill
+  # no carga. Es un fallo silencioso, así que se chequea explícitamente.
+  if [[ "${desc:0:1}" != "'" && "${desc:0:1}" != '"' && "$desc" == *": "* ]]; then
+    FM_ERROR="$file: «description» sin quotear contiene «: » → YAML inválido. Envolvela en comillas simples."
+    return 1
+  fi
+
+  return 0
 }
 
 verify_features() {
