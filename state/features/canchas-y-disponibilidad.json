@@ -1,7 +1,7 @@
 {
   "slug": "canchas-y-disponibilidad",
   "title": "Definir canchas y su disponibilidad horaria",
-  "state": "spec_draft",
+  "state": "archived",
   "owner": null,
   "created": "2026-08-13",
   "approval": null,
@@ -29,6 +29,12 @@
       "state": "spec_draft",
       "by": "tpiraino",
       "note": "cantidad de canchas confirmada como variable (A8). Se agregaron R29 copiar horario, R30 consulta de todas las canchas y R31 limite de 31 dias. 31 requisitos, 39 tareas."
+    },
+    {
+      "date": "2026-08-13",
+      "state": "archived",
+      "by": "tpiraino",
+      "note": "dividida en canchas-y-horario (22 req) y fechas-especiales-y-cierres (9 req), ambas aprobadas. Los 31 IDs de requisito se reparten sin renumerar: son unicos en todo el proyecto. Se borro specs/canchas-y-disponibilidad/ para no tener los mismos requisitos definidos en dos lugares (C12); el contenido vive en git y en las dos features hijas."
     }
   ]
 }

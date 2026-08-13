@@ -29,6 +29,8 @@ Corre siempre, no necesita nada instalado:
 | Un `in_progress` por owner | un mismo `owner` tiene dos o más features en `in_progress` |
 | Specs completas | una feature en `spec_approved` o posterior no tiene los tres archivos |
 | Requisitos con ID | un `requirements.md` no tiene ningún `R<n>` |
+| **IDs únicos en el proyecto** | un mismo `R<n>` está declarado en dos features — la trazabilidad no los podría distinguir |
+| Skills y agentes | falta uno de los 6 skills o 2 agentes, o su frontmatter YAML es inválido |
 | Ambigüedades resueltas | una feature aprobada todavía tiene `[AMBIGUO:` en sus requisitos |
 | **Trazabilidad** | un requisito de una feature `in_progress`/`in_review`/`done` no está mencionado en ningún test (C3) |
 | Sin secretos | un archivo trackeado matchea un patrón de credencial (C9) |
