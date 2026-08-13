@@ -3,16 +3,20 @@
 - **Slug:** `canchas-y-disponibilidad`
 - **Diseño:** [`design.md`](design.md)
 
-Orden de dependencia. Test antes de implementación (C3). Cada tarea referencia los
-requisitos que cubre. Los tildes se actualizan **en el mismo commit** que el
-trabajo: este archivo es el progreso real, no una intención.
+**El orden de ejecución es el orden del archivo.** Los números `T#` son etiquetas
+estables y no se reutilizan, así que una tarea agregada después puede aparecer con
+un número fuera de secuencia. Test antes de implementación (C3). Cada tarea
+referencia los requisitos que cubre. Los tildes se actualizan **en el mismo commit**
+que el trabajo: este archivo es el progreso real, no una intención.
 
-> ⚠️ **Nota de tamaño para el Gate 1.** Son 34 tareas y 28 requisitos. Es grande
-> para una sola feature. Hay una costura natural para partirla: **T1–T17** (andamiaje
-> + canchas) y **T18–T34** (las tres capas + consulta). Partirla da dos features
-> revisables y un primer merge más temprano; dejarla junta evita definir una API de
-> canchas sin saber todavía qué necesita la disponibilidad. **Lo decide el humano al
-> aprobar** — mi recomendación es partirla, pero no es una decisión mía.
+> ⚠️ **Nota de tamaño para el Gate 1 — cada vez más fuerte.** Son **39 tareas y 31
+> requisitos**. Creció al confirmarse que la cantidad de canchas es variable, que
+> agregó copiar horario y la consulta de todas. Costura natural para partirla:
+> **hasta T18** (andamiaje + canchas + resolución) y **desde T19** (las tres capas +
+> consultas). Partirla da dos features revisables y un primer merge más temprano;
+> dejarla junta evita definir una API de canchas sin saber qué necesita la
+> disponibilidad. **Lo decide el humano al aprobar** — recomiendo partirla, y con 39
+> tareas lo recomiendo más que antes.
 
 ## Cimientos
 
@@ -90,6 +94,14 @@ y se testea con tabla de casos.
 - [ ] **T21** — Implementación del horario semanal: `PUT` reemplaza la semana
       completa en una transacción, para no dejar la mitad cargada si una franja
       falla. (R7, R8, R9, R10)
+- [ ] **T35** — Test: copiar el horario de una cancha a otra lo **reemplaza
+      completo**, no lo fusiona; a varias canchas es atómico (si una falla, ninguna
+      cambia); no arrastra disponibilidad especial ni excepciones; sobre sí misma no
+      falla y no cambia nada; a una cancha inactiva se acepta. Cancha destino
+      inexistente devuelve 404. (R29)
+- [ ] **T36** — Implementación de copiar horario, en una sola transacción. Existe
+      porque la cantidad de canchas es variable: cargar seis canchas de pádel
+      idénticas de a una es donde la herramienta se abandona. (R29)
 
 ## Disponibilidad especial
 
@@ -122,8 +134,20 @@ y se testea con tabla de casos.
 - [ ] **T32** — Test: el resultado es idéntico consultando desde cualquier zona
       horaria; los horarios se devuelven en la del club. Incluye un rango que cruza
       el cambio de horario de verano. (R19)
-- [ ] **T33** — Implementación del endpoint de consulta: trae las filas de las tres
-      capas, llama a `resolver()`, serializa a `"HH:MM"`. (R16, R17, R18, R19, R28)
+- [ ] **T33** — Implementación del endpoint de consulta por cancha: trae las filas
+      de las tres capas, llama a `resolver()`, serializa a `"HH:MM"`. (R16, R17, R18,
+      R19, R28)
+- [ ] **T37** — Test: `GET /disponibilidad` sin id devuelve todas las canchas
+      activas; excluye las inactivas aunque tengan horario; sin ninguna activa
+      devuelve lista vacía y no error. **Y el resultado por cancha es idéntico al de
+      la consulta individual de esa cancha para el mismo rango** — es el test que
+      impide que los dos caminos se separen. (R30)
+- [ ] **T38** — Test: la consulta de todas acepta 31 días y rechaza 32 informando el
+      límite. Medir el tamaño de la respuesta en el máximo, para tener el número
+      documentado antes de que sea un problema. (R31)
+- [ ] **T39** — Implementación del endpoint de todas las canchas, **reusando la misma
+      `resolver()`** de T10. Una segunda implementación del cálculo es un rechazo de
+      review. (R30, R31)
 
 ## Cierre
 
@@ -132,7 +156,7 @@ y se testea con tabla de casos.
       serio de la feature (A6: sin auth en alcance) haciéndolo ruidoso en vez de
       silencioso (C11). Con su test.
 
-- [ ] Todos los requisitos `R1`–`R28` referenciados en al menos un test
+- [ ] Todos los requisitos `R1`–`R31` referenciados en al menos un test
 - [ ] `./verify.sh` verde, capa 2 incluida (ya hay código: typecheck, lint, tests,
       build tienen que correr de verdad)
 - [ ] `design.md` actualizado con el resultado de T1 (⚠️ → ✅ o el fallback)

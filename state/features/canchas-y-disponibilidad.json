@@ -23,6 +23,12 @@
       "state": "spec_draft",
       "by": "tpiraino",
       "note": "spec completa: 28 requisitos, 0 ambiguedades, 34 tareas. Modelo de 3 capas (horario semanal permanente + disponibilidad especial + excepciones). Un solo club, sin reservas, sin auth. Lista para Gate 1."
+    },
+    {
+      "date": "2026-08-13",
+      "state": "spec_draft",
+      "by": "tpiraino",
+      "note": "cantidad de canchas confirmada como variable (A8). Se agregaron R29 copiar horario, R30 consulta de todas las canchas y R31 limite de 31 dias. 31 requisitos, 39 tareas."
     }
   ]
 }

@@ -21,6 +21,19 @@ El resultado esperado es que alguien del club **configure cada cancha una sola
 vez** —su horario habitual, que no vence ni hay que renovar— y después solo
 registre las desviaciones: un día que abre distinto, un feriado, un mantenimiento.
 
+**La cantidad de canchas no es fija** (decisión del 2026-08-13): el club tiene que
+poder crear canchas nuevas y configurarlas cuando quiera. Eso tiene tres
+consecuencias que están en los requisitos y no son obvias:
+
+- Configurar N canchas desde cero es trabajo manual proporcional a N. De ahí
+  **R29**: copiar el horario de una cancha a otras. Un club con seis canchas de
+  pádel tiene seis horarios idénticos, y cargarlos de a uno es donde la
+  herramienta se abandona.
+- Cualquier vista que muestre todas las canchas necesita traerlas en **una** sola
+  operación, no N. De ahí **R30**.
+- El límite de rango tiene que ser más chico cuando se piden todas las canchas,
+  porque el tamaño de la respuesta crece con N. De ahí **R31**.
+
 ## Fuera de alcance
 
 Explícitamente **no** hace esta feature:
@@ -110,6 +123,9 @@ R22 El sistema deberá aplicar el horario semanal de una cancha a cualquier fech
 futura consultada, sin vencimiento y sin requerir ninguna reconfiguración
 periódica.
 
+R29 El sistema deberá permitir copiar el horario semanal completo de una cancha a
+una o más canchas.
+
 ### Disponibilidad especial — cuando una fecha es distinta
 
 R23 El sistema deberá permitir definir, para una cancha y una fecha concreta, las
@@ -159,6 +175,12 @@ de inicio, entonces el sistema deberá rechazar la consulta e informar el motivo
 R28 Si el rango de fechas consultado abarca más de 92 días, entonces el sistema
 deberá rechazar la consulta e informar el límite.
 
+R30 Cuando se consulta la disponibilidad sin indicar una cancha, el sistema deberá
+devolver la disponibilidad de todas las canchas activas para el rango pedido.
+
+R31 Si una consulta de disponibilidad de todas las canchas abarca más de 31 días,
+entonces el sistema deberá rechazarla e informar el límite.
+
 R19 El sistema deberá interpretar y devolver todos los horarios en la zona
 horaria del club, con independencia de la zona horaria de quien consulta.
 
@@ -195,6 +217,15 @@ Casos de borde que hay que probar y que no son requisitos nuevos.
 - **R22.a** — consultar una fecha a cinco años vista devuelve el horario semanal
   aplicado, sin haber hecho ninguna carga adicional. **Este es el criterio que
   distingue «configurado una vez» de «cargado hasta una fecha».**
+- **R29.a** — copiar a una cancha que ya tenía horario lo **reemplaza completo**,
+  no lo fusiona ni lo suma.
+- **R29.b** — copiar una cancha sobre sí misma no falla y no cambia nada.
+- **R29.c** — copiar a una cancha inactiva se acepta: el horario queda guardado y
+  rige cuando se reactive.
+- **R29.d** — copiar a varias canchas a la vez es atómico: si una falla, ninguna
+  queda modificada.
+- **R29.e** — copiar **no** arrastra la disponibilidad especial ni las
+  excepciones de la cancha origen. Solo el horario semanal.
 
 ### Disponibilidad especial
 
@@ -240,6 +271,13 @@ Casos de borde que hay que probar y que no son requisitos nuevos.
 - **R16.d** — fecha del rango sin ninguna disponibilidad: aparece en la respuesta
   con lista vacía, no se omite.
 - **R19.a** — el resultado es idéntico consultando desde cualquier zona horaria.
+- **R30.a** — sin ninguna cancha activa: devuelve lista vacía, no error.
+- **R30.b** — una cancha inactiva no aparece en la consulta de todas (R6), aunque
+  tenga horario configurado.
+- **R30.c** — el resultado por cancha es idéntico al que devuelve la consulta
+  individual de esa misma cancha para el mismo rango. Es lo que impide que las dos
+  consultas divergan.
+- **R31.a** — 31 días se acepta; 32 se rechaza informando el límite.
 
 ## Ambigüedades pendientes
 
@@ -253,4 +291,5 @@ Ninguna. Las siete que había se resolvieron el 2026-08-13:
 | A4 | Duración de turno por cancha (R21) |
 | A5 | Sin agenda por temporada: se edita el horario semanal |
 | A6 | Sin autenticación, y el servicio no se publica hasta que exista esa feature |
-| A7 | Rango máximo de consulta: 92 días (R28) |
+| A7 | Rango máximo de consulta: 92 días por cancha (R28), 31 días para todas (R31) |
+| A8 | La cantidad de canchas es variable y crece. Se agregaron R29 (copiar horario), R30 (consulta de todas) y R31 (límite más chico) |

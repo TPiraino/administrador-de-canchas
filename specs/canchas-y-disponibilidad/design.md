@@ -163,6 +163,7 @@ POST   /canchas/:id/desactivar                   R5
 
 PUT    /canchas/:id/horario                      R7, R8  (reemplaza la semana completa)
 GET    /canchas/:id/horario
+POST   /canchas/:id/horario/copiar               R29     { "aCanchas": ["uuid", …] }
 
 PUT    /canchas/:id/especial/:fecha              R23     (reemplaza la fecha completa)
 DELETE /canchas/:id/especial/:fecha              R26
@@ -173,7 +174,26 @@ DELETE /canchas/:id/excepciones/:excepcionId     R15
 GET    /canchas/:id/excepciones?desde=&hasta=
 
 GET    /canchas/:id/disponibilidad?desde=&hasta= R16, R17, R18, R19, R27, R28
+GET    /disponibilidad?desde=&hasta=             R30, R31  (todas las activas)
 ```
+
+**`/disponibilidad` sin id existe porque la cantidad de canchas es variable.**
+Cualquier vista que muestre el club entero necesita una sola llamada, no N: con
+doce canchas, N llamadas es doce veces la latencia y doce veces la chance de una
+respuesta parcial e inconsistente. La consulta individual se conserva porque es la
+que admite el rango largo (92 días contra 31).
+
+Las dos consultas comparten la misma función `resolver()`, y **R30.c exige que
+devuelvan lo mismo para la misma cancha y el mismo rango**. Es lo que impide que
+se vayan separando con el tiempo — el modo de falla clásico de tener dos caminos
+para el mismo cálculo.
+
+**`POST /horario/copiar` y no `PUT` en cada destino:** copiar a varias canchas
+tiene que ser atómico (R29.d). Con un `PUT` por destino, un fallo a mitad deja la
+mitad de las canchas con el horario nuevo y la otra mitad con el viejo, y nadie
+sabe cuáles. Copia solo el horario semanal: ni la disponibilidad especial ni las
+excepciones se arrastran (R29.e), porque son de una fecha concreta y no tienen
+sentido en otra cancha.
 
 `PUT` y no `POST` para horario y especial: reemplazan el conjunto completo de
 franjas de esa semana o esa fecha. Evita el estado intermedio inconsistente de ir
@@ -211,7 +231,9 @@ reconstruir el calendario.
 | Franja solapada | 409 | R10, R25 |
 | Cancha inexistente | 404 | R17 |
 | Rango invertido | 422 | R18 |
-| Rango > 92 días | 422 | R28 |
+| Rango > 92 días (una cancha) | 422 | R28 |
+| Rango > 31 días (todas) | 422 | R31 |
+| Cancha destino de una copia inexistente | 404 | R29 |
 | Deporte no reconocido | 422 | R1.b |
 
 Excepciones de dominio propias en el servicio, mapeadas a HTTP en un filtro. El
@@ -239,9 +261,9 @@ Sin valores reales en el repo: solo `.env.example` con las claves (C9).
 - **Módulos que se tocan:** todos nuevos. También se crea el andamiaje del
   monorepo (`apps/api`, `packages/shared`) por primera vez, según
   [ADR-0002](../../docs/adr/0002-layout-monorepo.md).
-- **Costos / performance:** una consulta de 92 días sobre N canchas resuelve en
-  memoria a partir de ~pocas decenas de filas. No hay riesgo de volumen en esta
-  escala.
+- **Costos / performance:** la resolución es en memoria a partir de pocas decenas
+  de filas por cancha. El único término que crece es el tamaño de la respuesta de
+  `/disponibilidad`, que es O(días × canchas) — de ahí el límite más chico de R31.
 
 ## Riesgos
 
@@ -254,3 +276,6 @@ Sin valores reales en el repo: solo `.env.example` con las claves (C9).
 | Franja que cruza medianoche (22:00–02:00) no es representable con minutos 0–1440 | Test explícito: se rechaza con error claro | **Limitación asumida**: una franja no cruza el día. Un horario nocturno se carga como dos franjas en dos fechas. Si duele, entra por `changes/` |
 | Sin multi-tenancy: si mañana hay un segundo club hay que migrar todas las tablas y todas las queries | No detectable por test; es una decisión tomada | Ninguna. **Deuda asumida explícitamente** el 2026-08-13 por decisión del owner, con el costo advertido. Registrada acá para que quede el rastro |
 | Tres capas es más superficie de la que necesitaría un club con horario fijo | Si a la tercera feature nadie usó `disponibilidad_especial`, sobra | Revisitar y colapsar a dos capas por `changes/` |
+| Las dos consultas de disponibilidad (una cancha / todas) se van separando y devuelven resultados distintos | Test **R30.c**: el resultado por cancha tiene que ser idéntico al de la consulta individual | Una sola función `resolver()` compartida. Si aparece una segunda implementación, es un rechazo de review |
+| Copiar horario pisa sin aviso el horario de la cancha destino | Test **R29.a**: la copia reemplaza, no fusiona — está especificado, no es accidente | Es responsabilidad de la interfaz confirmar antes de pisar. Queda anotado para la spec de UI |
+| El tamaño de la respuesta de `/disponibilidad` crece con la cantidad de canchas, que es variable | Medir el tamaño de la respuesta en el test de R31 con el máximo de días | Límite de 31 días (R31). Si el club llega a muchas canchas, paginar por cancha |
