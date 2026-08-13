@@ -23,9 +23,29 @@ Para empezar una spec: copiá `_template/` a `specs/<slug>/` y completá en orde
 
 ## `requirements.md` — el qué
 
-Requisitos numerados `R1`, `R2`, … en **notación EARS**. Los IDs son permanentes:
-si un requisito se elimina, su número no se reutiliza (queda como `~~R4~~
-eliminado en <change>`), porque hay tests y commits que lo referencian.
+Requisitos numerados `R1`, `R2`, … en **notación EARS**.
+
+### Los IDs son únicos en todo el proyecto, no por feature
+
+**Una feature nueva sigue la numeración donde quedó la anterior.** Si el proyecto
+llegó a `R31`, la siguiente feature arranca en `R32`.
+
+No es una preferencia estética: `verify.sh` chequea la trazabilidad buscando el ID
+como **texto plano** en los archivos de test. Si dos features declararan `R3`, un
+solo test que diga `R3` satisfaría a las dos y la trazabilidad mentiría en verde.
+Hay un chequeo que falla si un ID aparece declarado en dos features.
+
+Los IDs también son **permanentes**: si un requisito se elimina, su número no se
+reutiliza (queda como `~~R4~~ eliminado en <change>`), porque hay tests y commits
+que lo referencian. Y si una feature se divide, los IDs **se reparten sin
+renumerar** — cada mitad se queda con los suyos, aunque le queden huecos.
+
+> **Un ID al principio de línea es una declaración.** Para mencionar un requisito de
+> otra feature, escribilo entre backticks y **nunca al comienzo del renglón**, o
+> `verify.sh` lo va a leer como si esta feature lo declarara. Pasa en serio.
+
+Los IDs de tarea (`T1`, `T2`, …) son al revés: **locales a cada feature**, porque
+nada los referencia desde afuera.
 
 ### EARS — las cinco formas
 

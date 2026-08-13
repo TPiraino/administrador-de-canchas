@@ -93,8 +93,55 @@ verify_harness() {
     verify_features "${feature_files[@]}"
   fi
 
+  verify_ids_unicos
   verify_skills
   verify_no_secrets
+}
+
+# Los IDs de requisito tienen que ser únicos en TODO el proyecto, no por feature.
+# Motivo: verify_traceability busca el ID como texto plano en los tests. Si dos
+# features declaran R3, un solo test que diga «R3» satisface a las dos y la
+# trazabilidad miente en verde. Apareció de verdad al dividir una feature en dos.
+verify_ids_unicos() {
+  shopt -s nullglob
+  local reqs=(specs/*/requirements.md)
+  shopt -u nullglob
+
+  # el template no declara requisitos reales
+  local files=()
+  local f
+  for f in "${reqs[@]}"; do
+    [[ "$f" == specs/_template/* ]] || files+=("$f")
+  done
+
+  if ((${#files[@]} < 2)); then
+    pass "IDs de requisito únicos (${#files[@]} feature(s), nada que cruzar)"
+    return
+  fi
+
+  # «ID<TAB>slug» por cada declaración, y buscamos IDs presentes en más de un slug.
+  # Ojo: awk con separador " " hace split por whitespace y descarta el espacio
+  # inicial, así que el conteo es la cantidad real de slugs (no hay off-by-one).
+  local dupes
+  dupes="$(
+    for f in "${files[@]}"; do
+      local slug; slug="$(basename "$(dirname "$f")")"
+      grep -oE '^R[0-9]+' "$f" | sort -u | sed "s|\$|\t$slug|"
+    done | awk -F'\t' '
+      { seen[$1] = seen[$1] " " $2 }
+      END { for (id in seen) if (split(seen[id], a, " ") > 1) print id " →" seen[id] }
+    ' | sort -V
+  )"
+
+  if [[ -n "$dupes" ]]; then
+    fail "IDs de requisito declarados en más de una feature — la trazabilidad no los puede distinguir:"
+    while IFS= read -r line; do printf '      %s\n' "$line" >&2; done <<< "$dupes"
+    echo "      Un ID al principio de línea es una declaración. Para mencionar uno ajeno, usá backticks y no lo pongas al comienzo del renglón." >&2
+  else
+    local total
+    total="$(for f in "${files[@]}"; do grep -oE '^R[0-9]+' "$f"; done | sort -u | wc -l)"
+    pass "IDs de requisito únicos en el proyecto ($total en ${#files[@]} features)"
+  fi
 }
 
 # Las skills y agentes son parte del harness compartido: si alguien borra uno o le

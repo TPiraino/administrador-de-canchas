@@ -1,0 +1,13 @@
+{
+  "slug": "canchas-y-horario",
+  "title": "Canchas y su horario habitual",
+  "state": "spec_approved",
+  "owner": null,
+  "created": "2026-08-13",
+  "approval": { "by": "tpiraino", "at": "2026-08-13" },
+  "history": [
+    { "date": "2026-08-13", "state": "proposed",      "by": "tpiraino",       "note": "surge de dividir canchas-y-disponibilidad en dos" },
+    { "date": "2026-08-13", "state": "spec_draft",    "by": "claude (agente)", "note": "spec escrita: 22 requisitos, 28 tareas. Rebanada que ya sirve: alta de canchas, horario habitual y consulta." },
+    { "date": "2026-08-13", "state": "spec_approved", "by": "tpiraino",       "note": "Gate 1: aprobada explicitamente por el owner. La escribio el agente, la aprobo un humano, asi que no es autoaprobacion." }
+  ]
+}
