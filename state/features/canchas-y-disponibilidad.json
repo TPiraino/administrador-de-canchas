@@ -1,0 +1,28 @@
+{
+  "slug": "canchas-y-disponibilidad",
+  "title": "Definir canchas y su disponibilidad horaria",
+  "state": "spec_draft",
+  "owner": null,
+  "created": "2026-08-13",
+  "approval": null,
+  "history": [
+    {
+      "date": "2026-08-13",
+      "state": "proposed",
+      "by": "tpiraino",
+      "note": "primera feature del proyecto: alta de canchas y definicion de agenda. Reservas fuera de alcance."
+    },
+    {
+      "date": "2026-08-13",
+      "state": "spec_draft",
+      "by": "tpiraino",
+      "note": "requirements.md escrito: 19 requisitos, 7 ambiguedades abiertas. design.md pendiente del gate de ambiguedad."
+    },
+    {
+      "date": "2026-08-13",
+      "state": "spec_draft",
+      "by": "tpiraino",
+      "note": "spec completa: 28 requisitos, 0 ambiguedades, 34 tareas. Modelo de 3 capas (horario semanal permanente + disponibilidad especial + excepciones). Un solo club, sin reservas, sin auth. Lista para Gate 1."
+    }
+  ]
+}
